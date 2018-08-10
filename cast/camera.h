@@ -1,4 +1,3 @@
-#define FOV 60
 #define CAMERA_HEIGHT 32
 
 struct Camera {
@@ -6,6 +5,8 @@ struct Camera {
     double ypos;
     double xdir;
     double ydir;
+    double xplane;
+    double yplane;
 
     Camera();
 };
