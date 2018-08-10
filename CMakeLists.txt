@@ -3,11 +3,10 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
-project ("Cast")
+project (Cast)
 
 # Include sub-projects.
 add_subdirectory ("cast")
-
 
 set(SDL2_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/include")
 
@@ -23,5 +22,10 @@ endif ()
 string(STRIP "${SDL2_LIBRARIES}" SDL2_LIBRARIES)
 
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_CURRENT_LIST_DIR}/build")
-add_executable(Cast cast/cast.cpp)
+add_executable(
+    Cast 
+    cast/cast.cpp cast/cast.h 
+    cast/camera.cpp cast/camera.h
+    cast/world.cpp cast/world.h
+)
 target_link_libraries(Cast ${SDL2_LIBRARIES})
