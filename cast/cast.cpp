@@ -21,10 +21,6 @@ struct Colour {
     Colour(Uint8 r, Uint8 g, Uint8 b) : r(r), g(g), b(b) { }
 };
 
-Camera camera;
-World world;
-Uint8 screen_buffer[HEIGHT][WIDTH][4];
-
 double time = 0.0f;
 double prev_time = 0.0f;
 
@@ -38,14 +34,29 @@ bool toQuit(const SDL_Event& event) {
 	return def;
 }
 
-int main() {
+int main() {   
+    Camera camera;
+    World world;
+
 	SDL_Init(SDL_INIT_EVERYTHING);
+    atexit(SDL_Quit);
 	SDL_Event event;
 
 	SDL_Window* window = SDL_CreateWindow("cast", SDL_WINDOWPOS_CENTERED,
 		SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
 	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1,
 		SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    
+    SDL_RendererInfo info;
+    SDL_GetRendererInfo(renderer, &info);
+    std::cout << "Texture Formats:" << std::endl;
+    for (int i = 0; i < info.num_texture_formats; i++) {
+        std::cout << "\t" << SDL_GetPixelFormatName(info.texture_formats[i]) << std::endl;
+    }
+
+    SDL_Texture* screen_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,
+        SDL_TEXTUREACCESS_STREAMING, WIDTH, HEIGHT);
+    std::vector<unsigned char> screen_pixels(WIDTH * HEIGHT * 4, 0);
 
     std::vector<unsigned char> buffer, texture;
     loadFile(buffer, std::string("../data/tex/bricks.png"));
@@ -56,8 +67,7 @@ int main() {
 	bool quit = false;
 
 	while (!quit) {
-		const Uint8* keys;
-
+        const Uint8* keys;
 		while (SDL_PollEvent(&event)) {
 			SDL_Delay(5);
 			keys = SDL_GetKeyboardState(0);
@@ -154,18 +164,15 @@ int main() {
                 texture_x %= TEX_DIMENSION;
                 texture_y %= TEX_DIMENSION;
 
-                if (texture_y == -1 || texture_x == -1) {
-                    auto debug = true;
-                }
-
                 Uint8 r = texture[TEX_DIMENSION * texture_y*4 + texture_x*4];
                 Uint8 g = texture[TEX_DIMENSION * texture_y*4 + texture_x*4 + 1];
                 Uint8 b = texture[TEX_DIMENSION * texture_y*4 + texture_x*4 + 2];
 
-                screen_buffer[y][x][0] = r;
-                screen_buffer[y][x][1] = g;
-                screen_buffer[y][x][2] = b;
-                screen_buffer[y][x][3] = 255;
+                const int offset = WIDTH * y*4 + x*4;
+                screen_pixels[offset] = b;
+                screen_pixels[offset + 1] = g;
+                screen_pixels[offset + 2] = r;
+                screen_pixels[offset + 3] = 255;
             }
         }
 
@@ -175,18 +182,12 @@ int main() {
         double move_speed = frame_time * 3.0f;
         double rot_speed = frame_time * 3.0f;
 
-        for (int x = 0; x < WIDTH; x++) {
-            for (int y = 0; y < HEIGHT; y++) {
-                SDL_SetRenderDrawColor(renderer, 
-                    screen_buffer[y][x][0], 
-                    screen_buffer[y][x][1], 
-                    screen_buffer[y][x][2], 
-                    255);
-                SDL_RenderDrawPoint(renderer, x, y);
-            }
-        }
+        SDL_UpdateTexture(screen_texture, NULL, &screen_pixels[0], WIDTH*4);
+        SDL_RenderCopy(renderer, screen_texture, NULL, NULL);
         SDL_RenderPresent(renderer);
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        memset(&screen_pixels[0], 0, screen_pixels.size()*sizeof(screen_pixels[0]));
+
+	    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
         const Uint8* pressed_keys = SDL_GetKeyboardState(nullptr);
