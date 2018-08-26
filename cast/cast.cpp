@@ -8,6 +8,7 @@
 #include "cast.h"
 #include "camera.h"
 #include "SDL.h"
+#include <sstream>
 
 bool to_quit(const SDL_Event& event) {
 	bool def = false;
@@ -72,6 +73,7 @@ int main() {
         SDL_RenderCopy(renderer, screen_texture, NULL, NULL);
         SDL_RenderPresent(renderer);
         memset(&screen_pixels[0], 0, screen_pixels.size()*sizeof(screen_pixels[0]));
+        
 	    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 

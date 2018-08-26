@@ -42,6 +42,6 @@ public:
     std::vector<unsigned char> render_buffer(int width, int height);
 
 private:
-    RayInfo& get_ray_info(int x, int width);
-    CollisionInfo& get_collision_info(RayInfo& ray_info);
+    void get_ray_info(int x, int width, RayInfo& info);
+    void get_collision_info(RayInfo& ray_info, CollisionInfo& col_info);
 };

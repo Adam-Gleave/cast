@@ -26,8 +26,10 @@ std::vector<unsigned char> Camera::render_buffer(const int width, const int heig
     decodePNG(texture, w, h, &buffer[0], (unsigned long)buffer.size());
     
     for (int x = 0; x < width; x++) {
-        RayInfo& ray_info = get_ray_info(x, width);
-        CollisionInfo& col_info = get_collision_info(ray_info);
+        RayInfo ray_info;
+        CollisionInfo col_info;
+        get_ray_info(x, width, ray_info);
+        get_collision_info(ray_info, col_info);
 
         // Wall distance in camera direction
         double wall_dist = (col_info.hit_side == 0)
@@ -81,9 +83,7 @@ std::vector<unsigned char> Camera::render_buffer(const int width, const int heig
     return screen_pixels;
 }
 
-RayInfo& Camera::get_ray_info(const int x, const int width) {
-    RayInfo info;
-
+void Camera::get_ray_info(const int x, const int width, RayInfo& info) {
     info.x_camera_space = 2.0f * x / width - 1.0f;
     info.ray_x_direction = xdir + info.x_camera_space*xplane;
     info.ray_y_direction = ydir + info.x_camera_space*yplane;
@@ -107,12 +107,9 @@ RayInfo& Camera::get_ray_info(const int x, const int width) {
     info.dist_to_y = (info.ray_y_direction >= 0)
         ? (info.map_y + 1.0f - ypos) * info.delta_to_y
         : (ypos - info.map_y) * info.delta_to_y;
-
-    return info;
 }
 
-CollisionInfo& Camera::get_collision_info(RayInfo& ray_info) {
-        CollisionInfo col_info;
+void Camera::get_collision_info(RayInfo& ray_info, CollisionInfo& col_info) {
         int hit = 0;
 
         // DDA Algorithm
@@ -134,5 +131,4 @@ CollisionInfo& Camera::get_collision_info(RayInfo& ray_info) {
         }
 
         col_info.hit = hit;
-        return col_info;
 }
