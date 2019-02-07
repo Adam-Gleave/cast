@@ -1,7 +1,8 @@
-#include "../cast/world.h"
+#include "world.h"
 #include <string>
 
-World::World() {
+World::World() 
+{
     int temp[WORLD_X][WORLD_Y] = 
         {{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
         {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
@@ -17,6 +18,7 @@ World::World() {
     memcpy(map, temp, 100*sizeof(int));
 }
 
-const int World::getMapAt(const int x, const int y) {
+const int World::getMapAt(const int x, const int y) 
+{
     return map[x][y];
 }

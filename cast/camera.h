@@ -1,7 +1,8 @@
-#include "../cast/world.h"
+#include "world.h"
 #include <vector>
 
-struct RayInfo {
+struct RayInfo 
+{
     double x_camera_space;
     double ray_x_direction;
     double ray_y_direction;
@@ -17,14 +18,16 @@ struct RayInfo {
     double dist_to_y;
 };
 
-struct CollisionInfo {
+struct CollisionInfo 
+{
     int hit_side;
     int hit;
 
     CollisionInfo();
 };
 
-class Camera {
+class Camera 
+{
 public:
     double xpos;
     double ypos;

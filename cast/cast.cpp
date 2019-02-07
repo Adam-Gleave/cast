@@ -2,63 +2,75 @@
 #define WIDTH 800
 #define HEIGHT 600
 
-#include "../cast/cast.h"
-#include "../cast/camera.h"
-#include "../include/SDL.h"
+#include "cast.h"
+#include "camera.h"
+#include "SDL/SDL.h"
+#include <memory>
 #include <sstream>
 
 using namespace std;
 
-bool to_quit(const SDL_Event& event) {
+bool to_quit(const SDL_Event& event) 
+{
     bool def = false;
 
     switch (event.key.keysym.sym) {
-    case SDLK_ESCAPE:
-        return true;
+		case SDLK_ESCAPE:
+			return true;
     }
+
     return def;
 }
 
-struct TextureDeleter {
-    void operator()(SDL_Texture* texture_ptr) {
+struct TextureDeleter 
+{
+    void operator()(SDL_Texture* texture_ptr) 
+	{
         SDL_DestroyTexture(texture_ptr);
     }
 };
 
-struct RendererDeleter {
-    void operator()(SDL_Renderer* renderer_ptr) {
+struct RendererDeleter 
+{
+    void operator()(SDL_Renderer* renderer_ptr) 
+	{
         SDL_DestroyRenderer(renderer_ptr);
     }
 };
 
-struct WindowDeleter {
-    void operator()(SDL_Window* window_ptr) {
+struct WindowDeleter 
+{
+    void operator()(SDL_Window* window_ptr) 
+	{
         SDL_DestroyWindow(window_ptr);
     }
 };
 
 int event_loop(World* world, Camera* camera, SDL_Event& event,
-        SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* screen_texture) {
+        SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* screen_texture) 
+{
     // Pixel buffer
     vector<unsigned char> screen_pixels(WIDTH * HEIGHT * 4, 0);
 
     // Persistent variables
+	const Uint8* keys = nullptr;
     bool quit = false;
     double time = 0.0f;
     double prev_time = 0.0f;
 
     // Main event/render loop
     while (!quit) {
-        unique_ptr<const Uint8> keys(nullptr);
-
-        while (SDL_PollEvent(&event)) {
+        while (SDL_PollEvent(&event)) 
+		{
             SDL_Delay(5);
-            keys.reset(SDL_GetKeyboardState(0));
+            keys = SDL_GetKeyboardState(0);
 
-            if (event.type == SDL_QUIT) {
+            if (event.type == SDL_QUIT) 
+			{
                 quit = true;
             }
-            else if (event.type == SDL_KEYDOWN) {
+            else if (event.type == SDL_KEYDOWN) 
+			{
                 quit = to_quit(event);
             }
         }
@@ -83,25 +95,34 @@ int event_loop(World* world, Camera* camera, SDL_Event& event,
         SDL_RenderClear(renderer);
 
         // Handle key presses
-        auto pressed_keys = make_unique<const Uint8*>(SDL_GetKeyboardState(nullptr));
+        const Uint8* pressed_keys = SDL_GetKeyboardState(nullptr);
 
-        if (pressed_keys.get()[SDL_GetScancodeFromKey(SDLK_UP)]) {
-            if (!world->getMapAt(static_cast<int>(camera->xpos + camera->xdir * move_speed), static_cast<int>(camera->ypos))) {
+        if (pressed_keys[SDL_GetScancodeFromKey(SDLK_UP)]) 
+		{
+            if (!world->getMapAt(static_cast<int>(camera->xpos + camera->xdir * move_speed), static_cast<int>(camera->ypos))) 
+			{
                 camera->xpos += camera->xdir * move_speed; 
             }
-            if (!world->getMapAt(static_cast<int>(camera->xpos), static_cast<int>(camera->ypos + camera->ydir * move_speed))) {
+            if (!world->getMapAt(static_cast<int>(camera->xpos), static_cast<int>(camera->ypos + camera->ydir * move_speed))) 
+			{
                 camera->ypos += camera->ydir * move_speed;
             }
         }
-        if (pressed_keys.get()[SDL_GetScancodeFromKey(SDLK_DOWN)]) {
-            if (!world->getMapAt(static_cast<int>(camera->xpos - camera->xdir * move_speed), static_cast<int>(camera->ypos))) {
+
+        if (pressed_keys[SDL_GetScancodeFromKey(SDLK_DOWN)]) 
+		{
+            if (!world->getMapAt(static_cast<int>(camera->xpos - camera->xdir * move_speed), static_cast<int>(camera->ypos))) 
+			{
                 camera->xpos -= camera->xdir * move_speed; 
             }
-            if (!world->getMapAt(static_cast<int>(camera->xpos), static_cast<int>(camera->ypos - camera->ydir * move_speed))) {
+            if (!world->getMapAt(static_cast<int>(camera->xpos), static_cast<int>(camera->ypos - camera->ydir * move_speed))) 
+			{
                 camera->ypos -= camera->ydir * move_speed;
             }
         }
-        if (pressed_keys.get()[SDL_GetScancodeFromKey(SDLK_LEFT)]) {
+
+        if (pressed_keys[SDL_GetScancodeFromKey(SDLK_LEFT)]) 
+		{
             double prev_xdir = camera->xdir;
             camera->xdir = camera->xdir*cos(rot_speed) - camera->ydir*sin(rot_speed);
             camera->ydir = prev_xdir*sin(rot_speed) + camera->ydir*cos(rot_speed);
@@ -109,7 +130,9 @@ int event_loop(World* world, Camera* camera, SDL_Event& event,
             camera->xplane = camera->xplane*cos(rot_speed) - camera->yplane*sin(rot_speed);
             camera->yplane = prev_xplane*sin(rot_speed) + camera->yplane*cos(rot_speed);
         } 
-        if (pressed_keys.get()[SDL_GetScancodeFromKey(SDLK_RIGHT)]) {
+
+        if (pressed_keys[SDL_GetScancodeFromKey(SDLK_RIGHT)]) 
+		{
             double prev_xdir = camera->xdir;
             camera->xdir = camera->xdir*cos(-rot_speed) - camera->ydir*sin(-rot_speed);
             camera->ydir = prev_xdir*sin(-rot_speed) + camera->ydir*cos(-rot_speed);
