@@ -3,7 +3,8 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
-# Add source to this project's executable.
-add_executable (cast "cast.cpp" "cast.h")
+set(SDL2_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/include")
+
+include_directories(${SDL2_INCLUDE_DIRS})
 
 # TODO: Add tests and install targets if needed.

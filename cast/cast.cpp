@@ -4,7 +4,7 @@
 
 #include "cast.h"
 #include "camera.h"
-#include "SDL/SDL.h"
+#include "sdl_helpers.h"
 #include <memory>
 #include <sstream>
 
@@ -22,30 +22,6 @@ bool to_quit(const SDL_Event& event)
     return def;
 }
 
-struct TextureDeleter 
-{
-    void operator()(SDL_Texture* texture_ptr) 
-	{
-        SDL_DestroyTexture(texture_ptr);
-    }
-};
-
-struct RendererDeleter 
-{
-    void operator()(SDL_Renderer* renderer_ptr) 
-	{
-        SDL_DestroyRenderer(renderer_ptr);
-    }
-};
-
-struct WindowDeleter 
-{
-    void operator()(SDL_Window* window_ptr) 
-	{
-        SDL_DestroyWindow(window_ptr);
-    }
-};
-
 int event_loop(World* world, Camera* camera, SDL_Event& event,
         SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* screen_texture) 
 {
@@ -59,7 +35,8 @@ int event_loop(World* world, Camera* camera, SDL_Event& event,
     double prev_time = 0.0f;
 
     // Main event/render loop
-    while (!quit) {
+    while (!quit) 
+	{
         while (SDL_PollEvent(&event)) 
 		{
             SDL_Delay(5);
@@ -145,7 +122,8 @@ int event_loop(World* world, Camera* camera, SDL_Event& event,
     return 0;
 }
 
-int main() {
+int main() 
+{
     // Initialise world data
     auto world = make_unique<World>();
     auto camera = make_unique<Camera>(world.get());
@@ -155,11 +133,11 @@ int main() {
     atexit(SDL_Quit);
 	SDL_Event event;
 
-	auto window = unique_ptr<SDL_Window, WindowDeleter>(SDL_CreateWindow("cast", SDL_WINDOWPOS_CENTERED, 
+	auto window = unique_ptr<SDL_Window, SDLDeleter>(SDL_CreateWindow("cast", SDL_WINDOWPOS_CENTERED, 
         SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN));
-	auto renderer = unique_ptr<SDL_Renderer, RendererDeleter>(SDL_CreateRenderer(window.get(), -1,
+	auto renderer = unique_ptr<SDL_Renderer, SDLDeleter>(SDL_CreateRenderer(window.get(), -1,
 		SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC));
-    auto screen_texture = unique_ptr<SDL_Texture, TextureDeleter>(SDL_CreateTexture(renderer.get(), SDL_PIXELFORMAT_ARGB8888,
+    auto screen_texture = unique_ptr<SDL_Texture, SDLDeleter>(SDL_CreateTexture(renderer.get(), SDL_PIXELFORMAT_ARGB8888,
         SDL_TEXTUREACCESS_STREAMING, WIDTH, HEIGHT));
 
     return event_loop(world.get(), camera.get(), event, window.get(), renderer.get(), screen_texture.get());

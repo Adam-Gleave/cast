@@ -27,5 +27,6 @@ add_executable(
     cast/cast.cpp cast/cast.h 
     cast/camera.cpp cast/camera.h
     cast/world.cpp cast/world.h
+    cast/sdl_helpers.cpp cast/sdl_helpers.h
 )
 target_link_libraries(Cast ${SDL2_LIBRARIES})
