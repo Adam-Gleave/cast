@@ -1,4 +1,4 @@
-#include "camera.h"
+#include "../cast/camera.h"
 #include "picopng.cpp"
 
 #define TEX_DIMENSION 64
@@ -19,6 +19,7 @@ Camera::~Camera() {
 std::vector<unsigned char> Camera::render_buffer(const int width, const int height) { 
     std::vector<unsigned char> screen_pixels(width*height*4, 0);
 	std::vector<std::vector<unsigned char>> textures;
+	std::vector<int> zbuff;
 
     // Placeholder texture
     std::vector<unsigned char> buffer, texture;
@@ -27,7 +28,7 @@ std::vector<unsigned char> Camera::render_buffer(const int width, const int heig
     decodePNG(texture, w, h, &buffer[0], (unsigned long)buffer.size());
 	textures.push_back(texture);
 
-	loadFile(buffer, std::string("../data/tex/mud.png"));
+	loadFile(buffer, std::string("../data/tex/dirt.png"));
 	decodePNG(texture, w, h, &buffer[0], (unsigned long)buffer.size());
 	textures.push_back(texture);
 
@@ -141,6 +142,8 @@ std::vector<unsigned char> Camera::render_buffer(const int width, const int heig
 			screen_pixels[offset + 2] = 150;
 			screen_pixels[offset + 3] = 255;
 		}
+
+		zbuff.push_back(wall_dist);
     }
 
     return screen_pixels;

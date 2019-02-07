@@ -1,4 +1,4 @@
-#include "world.h"
+#include "../cast/world.h"
 #include <vector>
 
 struct RayInfo {
