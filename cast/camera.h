@@ -1,5 +1,6 @@
 #include "world.h"
 #include <vector>
+#include <memory>
 
 struct RayInfo 
 {
@@ -23,7 +24,7 @@ struct CollisionInfo
     int hit_side;
     int hit;
 
-    CollisionInfo();
+    CollisionInfo() : hit(0), hit_side(0) {}
 };
 
 class Camera 
@@ -36,15 +37,21 @@ public:
     double xplane;
     double yplane;
 
-    World* world;
-
-    Camera();
-    Camera(World* w);
-    ~Camera();
+    Camera(std::shared_ptr<World> w, const int width, const int height);
+    ~Camera() {}
 
     std::vector<unsigned char> render_buffer(int width, int height);
 
 private:
     void get_ray_info(int x, int width, RayInfo& info);
     void get_collision_info(RayInfo& ray_info, CollisionInfo& col_info);
+
+    std::vector<unsigned char> screen_pixels;
+    std::vector<std::vector<unsigned char>> textures;
+    std::vector<int> zbuff;
+
+    int width;
+    int height;
+
+    std::shared_ptr<World> world;
 };
