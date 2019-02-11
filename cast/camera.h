@@ -45,6 +45,8 @@ public:
 private:
     void get_ray_info(int x, int width, RayInfo& info);
     void get_collision_info(RayInfo& ray_info, CollisionInfo& col_info);
+    void calc_fog(const double dist, unsigned char* rgb);
+    void set_pixel(const size_t offset, const unsigned char* rgb);
 
     std::vector<unsigned char> screen_pixels;
     std::vector<std::vector<unsigned char>> textures;

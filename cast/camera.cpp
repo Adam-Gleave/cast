@@ -1,10 +1,14 @@
 #include "camera.h"
 #include "picopng.cpp"
 
-#define TEX_DIMENSION 64
-#define CAMERA_HEIGHT 32
-
 using namespace std;
+
+const int TEX_DIMENSION = 64;
+const int CAMERA_HEIGHT = 32;
+const int FOG_DIST = 20;
+const int SKY_R = 150;
+const int SKY_G = 170;
+const int SKY_B = 220;
 
 Camera::Camera(shared_ptr<World> w, const int width, const int height) 
     : xpos(8), ypos(8), xdir(-1), ydir(0), xplane(0), yplane(0.6),
@@ -75,33 +79,22 @@ vector<unsigned char> Camera::render_buffer(const int width, const int height)
             texture_x %= TEX_DIMENSION;
             texture_y %= TEX_DIMENSION;
 
-            unsigned char r = textures[0][TEX_DIMENSION * texture_y*4 + texture_x*4];
-            unsigned char g = textures[0][TEX_DIMENSION * texture_y*4 + texture_x*4 + 1];
-            unsigned char b = textures[0][TEX_DIMENSION * texture_y*4 + texture_x*4 + 2];
+            unsigned char rgb[3];
+            rgb[0] = textures[0][TEX_DIMENSION * texture_y*4 + texture_x*4];
+            rgb[1] = textures[0][TEX_DIMENSION * texture_y*4 + texture_x*4 + 1];
+            rgb[2] = textures[0][TEX_DIMENSION * texture_y*4 + texture_x*4 + 2];
 
             if (col_info.hit_side == 0) 
             {
-                r *= 0.75f;
-                g *= 0.75f;
-                b *= 0.75f;
+                rgb[0] *= 0.75f;
+                rgb[1] *= 0.75f;
+                rgb[2] *= 0.75f;
             }
 
-            double fog_dist = 20;
-            double fog_amount = wall_dist > fog_dist ? fog_dist : wall_dist;
-            b += (static_cast<double>(220 - b) / fog_dist) * fog_amount;
-            g += (static_cast<double>(170 - g) / fog_dist) * fog_amount;
-            r += (static_cast<double>(150 - r) / fog_dist) * fog_amount;
+            calc_fog(wall_dist, rgb);
 
-            const int offset = width * y*4 + x*4;
-            screen_pixels[offset] = b;
-            screen_pixels[offset + 1] = g;
-            screen_pixels[offset + 2] = r;
-            screen_pixels[offset + 3] = 255;
-
-            if (g == 170)
-            {
-                auto debug = true;
-            }
+            const size_t offset = width * y*4 + x*4;
+            set_pixel(offset, rgb);
         }
 
         double floor_x_at_wall, floor_y_at_wall;
@@ -144,33 +137,39 @@ vector<unsigned char> Camera::render_buffer(const int width, const int height)
             int floor_tex_x = static_cast<int>(current_floor_x * TEX_DIMENSION) % TEX_DIMENSION;
             int floor_tex_y = static_cast<int>(current_floor_y * TEX_DIMENSION) % TEX_DIMENSION;
 
-            unsigned char r = textures[1][TEX_DIMENSION * floor_tex_y * 4 + floor_tex_x * 4];
-            unsigned char g = textures[1][TEX_DIMENSION * floor_tex_y * 4 + floor_tex_x * 4 + 1];
-            unsigned char b = textures[1][TEX_DIMENSION * floor_tex_y * 4 + floor_tex_x * 4 + 2];
+            unsigned char rgb[3];
+            rgb[0] = textures[1][TEX_DIMENSION * floor_tex_y * 4 + floor_tex_x * 4];
+            rgb[1] = textures[1][TEX_DIMENSION * floor_tex_y * 4 + floor_tex_x * 4 + 1];
+            rgb[2] = textures[1][TEX_DIMENSION * floor_tex_y * 4 + floor_tex_x * 4 + 2];
+            calc_fog(current_dist, rgb);
 
-            double fog_dist = 20;
-            double fog_amount = current_dist > fog_dist ? fog_dist : current_dist;
-            b += (static_cast<double>(220 - b) / fog_dist) * fog_amount;
-            g += (static_cast<double>(170 - g) / fog_dist) * fog_amount;
-            r += (static_cast<double>(150 - r) / fog_dist) * fog_amount;
+            size_t buf_offset = width * y * 4 + x * 4;
+            set_pixel(buf_offset, rgb);
 
-            int offset = width * y * 4 + x * 4;
-            screen_pixels[offset] = b;
-            screen_pixels[offset + 1] = g;
-            screen_pixels[offset + 2] = r;
-            screen_pixels[offset + 3] = 255;
-
-            offset = width * (height - y) * 4 + x * 4;
-            screen_pixels[offset] = 220;
-            screen_pixels[offset + 1] = 170;
-            screen_pixels[offset + 2] = 150;
-            screen_pixels[offset + 3] = 255;
+            buf_offset = width * (height - y) * 4 + x * 4;
+            set_pixel(buf_offset, rgb);
         }
 
         zbuff.push_back(wall_dist);
     }
 
     return screen_pixels;
+}
+
+void Camera::calc_fog(const double dist, unsigned char* rgb)
+{
+    double fog_amount = dist > FOG_DIST ? FOG_DIST : dist;
+    rgb[0] += (static_cast<double>(SKY_R - rgb[0]) / FOG_DIST) * fog_amount;
+    rgb[1] += (static_cast<double>(SKY_B- rgb[1]) / FOG_DIST) * fog_amount;
+    rgb[2] += (static_cast<double>(SKY_B - rgb[2]) / FOG_DIST) * fog_amount;
+}
+
+void Camera::set_pixel(const size_t buf_offset, const unsigned char* rgb)
+{
+    screen_pixels[buf_offset] = rgb[2];
+    screen_pixels[buf_offset + 1] = rgb[1];
+    screen_pixels[buf_offset + 2] = rgb[0];
+    screen_pixels[buf_offset + 3] = 255;
 }
 
 void Camera::get_ray_info(const int x, const int width, RayInfo& info) 

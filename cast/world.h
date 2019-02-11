@@ -1,5 +1,5 @@
-#define WORLD_X 16
-#define WORLD_Y 16
+const int WORLD_X = 16;
+const int WORLD_Y = 16;
 
 class World 
 {

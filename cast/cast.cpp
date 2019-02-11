@@ -1,6 +1,4 @@
 ﻿#define SDL_MAIN_HANDLED
-#define WIDTH 800
-#define HEIGHT 600
 
 #include "cast.h"
 #include "camera.h"
@@ -9,6 +7,9 @@
 #include <sstream>
 
 using namespace std;
+
+const int WIDTH = 800;
+const int HEIGHT = 600;
 
 bool to_quit(const SDL_Event& event) 
 {
