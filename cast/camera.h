@@ -45,8 +45,12 @@ public:
 private:
     void get_ray_info(int x, int width, RayInfo& info);
     void get_collision_info(RayInfo& ray_info, CollisionInfo& col_info);
+    double get_wall_distance(RayInfo& ray_info, CollisionInfo& col_info);
     void calc_fog(const double dist, unsigned char* rgb);
     void set_pixel(const size_t offset, const unsigned char* rgb);
+    
+    int draw_walls(RayInfo& ray_info, CollisionInfo& col_info, double wall_dist, double wall_hit_x, int x);
+    void draw_floor_ceiling(RayInfo& ray_info, CollisionInfo& col_info, double wall_dist, double wall_hit_x, int draw_end, int x);
 
     std::vector<unsigned char> screen_pixels;
     std::vector<std::vector<unsigned char>> textures;
