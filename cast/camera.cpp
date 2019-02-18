@@ -12,7 +12,7 @@ const int SKY_B = 220;
 
 Camera::Camera(shared_ptr<World> w, const int width, const int height) 
     : xpos(8), ypos(8), xdir(-1), ydir(0), xplane(0), yplane(0.6),
-      width(width), height(height)
+      width(width), height(height), move_speed(0.0), rot_speed(0.0)
 {
     world = w;
     screen_pixels = vector<unsigned char>(width*height*4, 0);
@@ -168,8 +168,6 @@ void Camera::draw_floor_ceiling(RayInfo& ray_info, CollisionInfo& col_info, doub
     }
 }
 
-
-
 void Camera::calc_fog(const double dist, unsigned char* rgb)
 {
     double fog_amount = dist > FOG_DIST ? FOG_DIST : dist;
@@ -184,6 +182,69 @@ void Camera::set_pixel(const size_t buf_offset, const unsigned char* rgb)
     screen_pixels[buf_offset + 1] = rgb[1];
     screen_pixels[buf_offset + 2] = rgb[0];
     screen_pixels[buf_offset + 3] = 255;
+}
+
+void Camera::handle_event(const Event e)
+{
+    switch (e)
+    {
+        case KEY_UP:
+        {
+            if (!world->getMapAt(static_cast<int>(xpos + xdir * move_speed), static_cast<int>(ypos))) 
+            {
+                xpos += xdir * move_speed; 
+            }
+
+            if (!world->getMapAt(static_cast<int>(xpos), static_cast<int>(ypos + ydir * move_speed))) 
+            {
+                ypos += ydir * move_speed;
+            }
+
+            break;
+        }
+        case KEY_DOWN:
+        {
+            if (!world->getMapAt(static_cast<int>(xpos - xdir * move_speed), static_cast<int>(ypos))) 
+            {
+                xpos -= xdir * move_speed; 
+            }
+
+            if (!world->getMapAt(static_cast<int>(xpos), static_cast<int>(ypos - ydir * move_speed))) 
+            {
+                ypos -= ydir * move_speed;
+            }
+
+            break;
+        }
+        case KEY_LEFT:
+        {
+            double prev_xdir = xdir;
+            xdir = xdir*cos(rot_speed) - ydir*sin(rot_speed);
+            ydir = prev_xdir*sin(rot_speed) + ydir*cos(rot_speed);
+            double prev_xplane = xplane;
+            xplane = xplane*cos(rot_speed) - yplane*sin(rot_speed);
+            yplane = prev_xplane*sin(rot_speed) + yplane*cos(rot_speed);  
+
+            break;
+        }
+        case KEY_RIGHT:
+        {
+            double prev_xdir = xdir;
+            xdir = xdir*cos(-rot_speed) - ydir*sin(-rot_speed);
+            ydir = prev_xdir*sin(-rot_speed) + ydir*cos(-rot_speed);
+            double prev_xplane = xplane;
+            xplane = xplane*cos(-rot_speed) - yplane*sin(-rot_speed);
+            yplane = prev_xplane*sin(-rot_speed) + yplane*cos(-rot_speed);
+
+            break;
+        }
+    }
+}
+
+void Camera::update_speeds(double move, double rot)
+{
+    move_speed = move;
+    rot_speed = rot;
 }
 
 void Camera::get_ray_info(const int x, const int width, RayInfo& info) 

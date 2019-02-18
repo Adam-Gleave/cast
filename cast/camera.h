@@ -1,3 +1,4 @@
+#include "events.h"
 #include "world.h"
 #include <vector>
 #include <memory>
@@ -27,20 +28,16 @@ struct CollisionInfo
     CollisionInfo() : hit(0), hit_side(0) {}
 };
 
-class Camera 
+class Camera : public Handler
 {
 public:
-    double xpos;
-    double ypos;
-    double xdir;
-    double ydir;
-    double xplane;
-    double yplane;
-
     Camera(std::shared_ptr<World> w, const int width, const int height);
     ~Camera() {}
 
+    void handle_event(const Event e) override;
+
     std::vector<unsigned char> render_buffer(int width, int height);
+    void update_speeds(double move_speed, double rot_speed);
 
 private:
     void get_ray_info(int x, int width, RayInfo& info);
@@ -58,6 +55,14 @@ private:
 
     int width;
     int height;
+    double move_speed;
+    double rot_speed;
+    double xpos;
+    double ypos;
+    double xdir;
+    double ydir;
+    double xplane;
+    double yplane;
 
     std::shared_ptr<World> world;
 };

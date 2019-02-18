@@ -23,78 +23,37 @@ bool to_quit(const SDL_Event& event)
     return def;
 }
 
-void key_up(Camera* camera, World* world, double move_speed)
+void queue_key_events(EventQueue& queue)
 {
-    if (!world->getMapAt(static_cast<int>(camera->xpos + camera->xdir * move_speed), static_cast<int>(camera->ypos))) 
+    const Uint8* keys = SDL_GetKeyboardState(nullptr);
+
+    if (keys[SDL_GetScancodeFromKey(SDLK_UP)])
     {
-        camera->xpos += camera->xdir * move_speed; 
+        queue.push(Event::KEY_UP);
     }
 
-    if (!world->getMapAt(static_cast<int>(camera->xpos), static_cast<int>(camera->ypos + camera->ydir * move_speed))) 
+    if (keys[SDL_GetScancodeFromKey(SDLK_DOWN)])
     {
-        camera->ypos += camera->ydir * move_speed;
-    }
-}
-
-void key_down(Camera* camera, World* world, double move_speed)
-{
-    if (!world->getMapAt(static_cast<int>(camera->xpos - camera->xdir * move_speed), static_cast<int>(camera->ypos))) 
-    {
-        camera->xpos -= camera->xdir * move_speed; 
+        queue.push(Event::KEY_DOWN);
     }
 
-    if (!world->getMapAt(static_cast<int>(camera->xpos), static_cast<int>(camera->ypos - camera->ydir * move_speed))) 
+    if (keys[SDL_GetScancodeFromKey(SDLK_LEFT)])
     {
-        camera->ypos -= camera->ydir * move_speed;
-    }   
-}
-
-void key_left(Camera* camera, World* world, double rot_speed)
-{
-    double prev_xdir = camera->xdir;
-    camera->xdir = camera->xdir*cos(rot_speed) - camera->ydir*sin(rot_speed);
-    camera->ydir = prev_xdir*sin(rot_speed) + camera->ydir*cos(rot_speed);
-    double prev_xplane = camera->xplane;
-    camera->xplane = camera->xplane*cos(rot_speed) - camera->yplane*sin(rot_speed);
-    camera->yplane = prev_xplane*sin(rot_speed) + camera->yplane*cos(rot_speed);  
-}
-
-void key_right(Camera* camera, World* world, double rot_speed)
-{
-    double prev_xdir = camera->xdir;
-    camera->xdir = camera->xdir*cos(-rot_speed) - camera->ydir*sin(-rot_speed);
-    camera->ydir = prev_xdir*sin(-rot_speed) + camera->ydir*cos(-rot_speed);
-    double prev_xplane = camera->xplane;
-    camera->xplane = camera->xplane*cos(-rot_speed) - camera->yplane*sin(-rot_speed);
-    camera->yplane = prev_xplane*sin(-rot_speed) + camera->yplane*cos(-rot_speed);
-}
-
-void handle_keys(const Uint8* keys, Camera* camera, World* world, double move_speed, double rot_speed)
-{
-    if (keys[SDL_GetScancodeFromKey(SDLK_UP)]) 
-    {
-        key_up(camera, world, move_speed);
+        queue.push(Event::KEY_LEFT);
     }
 
-    if (keys[SDL_GetScancodeFromKey(SDLK_DOWN)]) 
+    if (keys[SDL_GetScancodeFromKey(SDLK_RIGHT)])
     {
-        key_down(camera, world, move_speed);
-    }
-
-    if (keys[SDL_GetScancodeFromKey(SDLK_LEFT)]) 
-    {
-        key_left(camera, world, rot_speed);
-    } 
-
-    if (keys[SDL_GetScancodeFromKey(SDLK_RIGHT)]) 
-    {
-        key_right(camera, world, rot_speed);
+        queue.push(Event::KEY_RIGHT);
     }
 }
 
 int event_loop(World* world, Camera* camera, SDL_Event& event,
         SDL_Window* window, SDL_Renderer* renderer, SDL_Texture* screen_texture) 
 {
+    EventQueue event_queue;
+    event_queue.register_handler(camera);
+
     // Pixel buffer
     vector<unsigned char> screen_pixels(WIDTH * HEIGHT * 4, 0);
 
@@ -131,6 +90,7 @@ int event_loop(World* world, Camera* camera, SDL_Event& event,
         prev_time = time;
         double move_speed = frame_time * 3.0f;
         double rot_speed = frame_time * 3.0f;
+        camera->update_speeds(move_speed, rot_speed);
 
         // Place pixel buffer into SDL_Texture and render
         SDL_UpdateTexture(screen_texture, NULL, &screen_pixels[0], WIDTH*4);
@@ -142,8 +102,8 @@ int event_loop(World* world, Camera* camera, SDL_Event& event,
         SDL_RenderClear(renderer);
 
         // Handle key presses
-        const Uint8* keys = SDL_GetKeyboardState(nullptr);
-        handle_keys(keys, camera, world, move_speed, rot_speed);
+        queue_key_events(event_queue);
+        event_queue.check_and_execute();
     }
 
     return 0;
